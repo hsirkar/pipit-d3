@@ -84,14 +84,28 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
         .attr('fill', d => colorScale(d['Name']))
         .attr('opacity', 1);
 
+    // Create a clipPath for each rectangle
+    const clips = rectG.append('clipPath')
+        .attr('id', (d, i) => 'clip' + i)
+        .append('rect')
+        .attr('x', d => xScale(d['Timestamp (ns)']))
+        .attr('y', d => yScale(d['Process']))
+        .attr('width', d =>
+            Math.abs(
+                xScale(d['_matching_timestamp']) - xScale(d['Timestamp (ns)']),
+            ),
+        )
+        .attr('height', yScale.bandwidth() * 0.9);
+
     // Add text inside the rectangles
     const labels = rectG.append('text')
         .attr('x', d => xScale(d['Timestamp (ns)']) + 5) // Adjust these values as needed
         .attr('y', d => yScale(d['Process']) + yScale.bandwidth() / 2)
         .attr('dy', '.35em') // Vertically center text
         .text(d => d['Name'])
-        .attr('font-size', '10px') // Adjust as needed
-        .attr('fill', 'black'); // Adjust as needed
+        .attr('class', 'function-label')
+        .attr('fill', 'black') // Adjust as needed
+        .attr('clip-path', (d, i) => 'url(#clip' + i + ')'); // Apply the clipPath to this label
 
     // Draw circles for instant events
     const dots = main
@@ -161,6 +175,16 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
 
         // Update the position of the dots
         dots.attr('cx', d => newXScale(d['Timestamp (ns)']));
+
+        // Update the position of the clips
+        clips
+            .attr('x', d => newXScale(d['Timestamp (ns)']))
+            .attr(
+                'width',
+                d =>
+                    newXScale(d['_matching_timestamp']) -
+                    newXScale(d['Timestamp (ns)']),
+            );
 
         // Update the position of the labels
         labels.attr('x', d => newXScale(d['Timestamp (ns)']) + 5);
