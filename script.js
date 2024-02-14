@@ -1,6 +1,5 @@
 // Sample data (replace this with your actual data)
 // const data = generateRandomData(5, 20); // Example with 5 processes and 20 events
-import d3 from 'd3';
 
 // Fetch data using d3
 const data = d3.json('ping-pong-otf2.json').then(data => {
@@ -52,10 +51,21 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
         .attr('height', yScale.bandwidth())
         .attr('fill', '#f0f0f0');
 
-    const plot = svg.append('g');
+    // Create a group element and apply a clip-path to it
+    const main = svg.append('g')
+        .attr('clip-path', 'url(#clip)');
+
+    // Define the clipPath
+    svg.append('defs')
+        .append('clipPath')
+        .attr('id', 'clip')
+        .append('rect')
+        .attr('width', svgWidth - margin.left - margin.right)
+        .attr('height', svgHeight - margin.top - margin.bottom)
+        .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     // Draw rectangles for enter events
-    const rects = plot
+    const rects = main
         .selectAll('.enter-event')
         .data(data.filter(d => d['Event Type'] === 'Enter'))
         .enter()
@@ -75,7 +85,7 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
         .attr('class', 'enter-event');
 
     // Draw circles for instant events
-    const dots = plot
+    const dots = main
         .selectAll('.instant-event')
         .data(data.filter(d => d['Event Type'] === 'Instant'))
         .enter()
@@ -129,23 +139,28 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
         dots.attr('cx', d => newXScale(d['Timestamp (ns)']));
     }
 
-    // Add mouseover and mouseout events to the rectangles for enter events
-    svg.selectAll('.enter-event')
-        .on('mouseover', function () {
-            d3.select(this).attr('fill', 'green'); // Change color to green on mouseover
-            console.log(d3.select(this).data()[0]);
-        })
-        .on('mouseout', function (d) {
-            d3.select(this).attr('fill', d => colorScale(d['Name'])); // Change color back to original on mouseout
-        });
+    // // Add mouseover and mouseout events to the rectangles for enter events
+    // svg.selectAll('.enter-event')
+    //     .on('mouseover', function () {
+    //         d3.select(this).attr('fill', 'green'); // Change color to green on mouseover
+    //         console.log(d3.select(this).data()[0]);
+    //     })
+    //     .on('mouseout', function (d) {
+    //         d3.select(this).attr('fill', d => colorScale(d['Name'])); // Change color back to original on mouseout
+    //     });
 
-    // Add mouseover and mouseout events to the circles for instant events
-    svg.selectAll('.instant-event')
-        .on('mouseover', function () {
-            d3.select(this).attr('fill', 'green'); // Change color to green on mouseover
-            console.log(d3.select(this).data()[0]);
-        })
-        .on('mouseout', function (d) {
-            d3.select(this).attr('fill', d => colorScale(d['Name'])); // Change color back to original on mouseout
-        });
+    // // Add mouseover and mouseout events to the circles for instant events
+    // svg.selectAll('.instant-event')
+    //     .on('mouseover', function () {
+    //         d3.select(this).attr('fill', 'green'); // Change color to green on mouseover
+    //         console.log(d3.select(this).data()[0]);
+    //     })
+    //     .on('mouseout', function (d) {
+    //         d3.select(this).attr('fill', d => colorScale(d['Name'])); // Change color back to original on mouseout
+    //     });
+
+    // Print info about clicked object on click
+    svg.selectAll('.enter-event, .instant-event').on('click', function (d) {
+        console.log(d3.select(this).data()[0]);
+    });
 });
