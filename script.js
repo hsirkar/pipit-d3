@@ -1,40 +1,6 @@
-// Function to generate random data
-function generateRandomData(numProcesses, numEvents) {
-    const comp = ["Alice", "Bob", "Charlie", "David", "Eve",
-        "Frank", "Grace", "Heidi", "Ivan", "Judy", "Kevin", "Linda",
-        "Michael", "Nancy", "Oscar", "Peggy", "Quincy", "Rita", "Steve",
-        "Tina", "Ursula", "Victor", "Wendy", "Xander", "Yvonne", "Zach"];
-
-    const comm = ["MPI_Send", "MPI_Recv", "MPI_Barrier", "MPI_Bcast", "MPI_Gather"];
-
-    const processes = [];
-    for (let i = 0; i < numProcesses; i++) {
-        processes.push(i);
-    }
-
-    const data = [];
-    for (let i = 0; i < numEvents; i++) {
-        const processIndex = Math.floor(Math.random() * numProcesses);
-        const compIndex = Math.floor(Math.random() * comp.length);
-        const commIndex = Math.floor(Math.random() * comm.length);
-        const eventType = Math.random() < 0.5 ? "enter" : "instant";
-        const time = Math.floor(Math.random() * 1000); // Adjust the range as needed
-        const matchingTime = eventType === "instant" ? null : time + Math.floor(Math.random() * 100); // Adjust the range as needed
-
-        data.push({
-            process: processes[processIndex],
-            name: eventType === "instant" ? comm[commIndex] : comp[compIndex],
-            time: time,
-            eventType: eventType,
-            matchingTime: matchingTime
-        });
-    }
-
-    return data;
-}
-
 // Sample data (replace this with your actual data)
 const data = generateRandomData(5, 20); // Example with 5 processes and 20 events
+console.log(data);
 
 // const processes = data.map(d => d.process).sort().filter((value, index, self) => self.indexOf(value) === index);
 // Get the unique processes
@@ -122,18 +88,18 @@ svg.call(zoom);
 svg.selectAll(".enter-event")
     .on("mouseover", function () {
         d3.select(this).attr("fill", "green"); // Change color to green on mouseover
-        console.log(d3.select(this).data());
+        console.log(d3.select(this).data()[0]);
     })
     .on("mouseout", function (d) {
-        d3.select(this).attr("fill", d => colorScale(d.eventType)); // Change color back to original on mouseout
+        d3.select(this).attr("fill", d => colorScale(d.name)); // Change color back to original on mouseout
     });
 
 // Add mouseover and mouseout events to the circles for instant events
 svg.selectAll(".instant-event")
     .on("mouseover", function () {
         d3.select(this).attr("fill", "green"); // Change color to green on mouseover
-        console.log(d3.select(this).data());
+        console.log(d3.select(this).data()[0]);
     })
     .on("mouseout", function (d) {
-        d3.select(this).attr("fill", d => colorScale(d.eventType)); // Change color back to original on mouseout
+        d3.select(this).attr("fill", d => colorScale(d.name)); // Change color back to original on mouseout
     });
