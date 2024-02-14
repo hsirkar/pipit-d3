@@ -8,24 +8,19 @@ function randomName() {
     return randomFromArray(names);
 }
 
+// Return a duration between 10 and 100
+// But more likely to be closer to 10 and less likely to be closer to 100
 function randomDuration() {
-    return Math.floor(Math.random() * 100);
+    return 10 + Math.floor(Math.random() * Math.random() * 100);
 }
 
-function generateRandomData(numProcesses, numEvents) {
-    const allEvents = {
-        0: [],
-        1: []
-    };
-
-    const times = {
-        0: randomDuration(),
-        1: randomDuration(),
-    };
-    const stacks = {
-        0: [],
-        1: [],
-    };
+function generateRandomData(numProcesses) {
+    const allEvents = {}, times = {}, stacks = {};
+    for (let i = 0; i < numProcesses; i++) {
+        allEvents[i] = [];
+        times[i] = randomDuration();
+        stacks[i] = [];
+    }
 
     function generateForProcess(process) {
         let time = times[process];
@@ -115,10 +110,18 @@ function generateRandomData(numProcesses, numEvents) {
         }
     }
 
-    generateForProcess(0);
+    for (let i = 0; i < numProcesses; i++) {
+        generateForProcess(i);
+    }
 
-
-    return allEvents[0];
+    // concatenate all processes into a single array
+    const allEventsArray = [];
+    for (let i = 0; i < numProcesses; i++) {
+        allEventsArray.push(...allEvents[i]);
+    }
+    // sort by time
+    allEventsArray.sort((a, b) => a.time - b.time);
+    return allEventsArray;
 }
 
 function generateRandomDataOld(numProcesses, numEvents) {
