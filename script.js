@@ -1,16 +1,19 @@
 // Sample data (replace this with your actual data)
 const data = generateRandomData(5, 20); // Example with 5 processes and 20 events
 console.log(data);
+console.log((data.map(d => d.depth)));
 
 // const processes = data.map(d => d.process).sort().filter((value, index, self) => self.indexOf(value) === index);
 // Get the unique processes
 const processes = data.map(d => d.process).sort().filter((value, index, self) => self.indexOf(value) === index).sort();
-console.log(processes);
+const depths = data.map(d => d.depth).sort().filter((value, index, self) => self.indexOf(value) === index).sort();
+console.log("Number of processes: " + processes.length);
+console.log("Number of depths: " + depths.length);
 
 // Set up SVG container with margins
 const margin = { top: 20, right: 50, bottom: 50, left: 60 }; // Adjust margins as needed
 const svgWidth = window.innerWidth - margin.left - margin.right;
-const svgHeight = 40 * data.map(d => d.process).filter((value, index, self) => self.indexOf(value) === index).length;
+const svgHeight = 70 + 20 * processes.length;
 const svg = d3.select("#visualization")
     .append("svg")
     .attr("width", svgWidth + margin.left + margin.right)
@@ -51,7 +54,8 @@ svg.selectAll(".enter-event")
     .attr("y", d => yScale(d.process))
     .attr("width", d => Math.abs(xScale(d.matchingTime) - xScale(d.time)))
     .attr("height", yScale.bandwidth())
-    .attr("fill", d => colorScale(d.name));
+    .attr("fill", d => colorScale(d.name))
+    .attr("opacity", 0.5);
 
 // Draw circles for instant events
 svg.selectAll(".instant-event")
