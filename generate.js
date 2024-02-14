@@ -22,7 +22,7 @@ function generateRandomData(numProcesses) {
         stacks[i] = [];
     }
 
-    function generateForProcess(process) {
+    async function generateForProcess(process) {
         let time = times[process];
         let stack = stacks[process];
         let events = allEvents[process];
@@ -31,13 +31,30 @@ function generateRandomData(numProcesses) {
             let eventType;
 
             if (stack.length) {
-                // make it exponentially harder to generate an enter event based on the number of events in the stack
-                const p = Math.pow(0.5, stack.length);
-                if (Math.random() > p) {
+                let top = stack[stack.length - 1];
+                
+                while (stack.length && top >= events.length) {
+                    stack.pop();
+                    top = stack[stack.length - 1];
+                }
+
+                if (!stack.length) {
+                    eventType = "enter";
+                } else {
+                
+                const name = events[top].name;
+                if (name == "MPI_Send" || name == "MPI_Recv") {
                     eventType = "leave";
                 } else {
-                    eventType = "enter";
+                    // make it exponentially harder to generate an enter event based on the number of events in the stack
+                    const p = Math.pow(0.5, stack.length);
+                    if (Math.random() > p) {
+                        eventType = "leave";
+                    } else {
+                        eventType = "enter";
+                    }
                 }
+            }
             } else {
                 eventType = "enter";
             }
@@ -68,27 +85,48 @@ function generateRandomData(numProcesses) {
                 });
 
                 // MPI send instant event
-                // if (data[index].name == "MPI_Send") {
-                //     data.push({
-                //         process: 0,
-                //         name: "MpiSend",
-                //         time: time - (randomDuration() / 20),
-                //         eventType: "instant",
-                //         recvProcess: 1,
-                //         depth: stack.length,
-                //     });
+                if (events[index].name == "MPI_Send") {
+                    const recvProcess = Math.floor(Math.random() * numProcesses);
+                    const recvTime = time + randomDuration();
 
-                //     const recvTime = time + randomDuration();
+                    events.push({
+                        process: process,
+                        name: "MpiSend",
+                        time: time - (randomDuration() / 20),
+                        eventType: "instant",
+                        recvProcess: recvProcess,
+                        matchingTime: recvTime,
+                        depth: stack.length,
+                    });
 
-                //     data.push({
-                //         process: 1,
-                //         name: "MpiRecv",
-                //         time: recvTime,
-                //         eventType: "instant",
-                //         matchingTime: time,
-                //         sendProcess: 0,
-                //     });
-                // }
+                    // Remove all of the events in allEvents[recvProcess]
+                    // that are after the recvTime
+                    const recvFunctionStartTime = recvTime - (randomDuration() / 20);
+                    allEvents[recvProcess] = allEvents[recvProcess].filter(e => e.time < recvFunctionStartTime);
+                    
+                    allEvents[recvProcess].push({
+                        process: recvProcess,
+                        name: "MPI_Recv",
+                        time: recvFunctionStartTime,
+                        eventType: "enter",
+                        matchingTime: time,
+                        sendProcess: process,
+                        depth: stacks[recvProcess].length,
+                    });
+                    stacks[recvProcess].push(allEvents[recvProcess].length - 1);
+
+                    allEvents[recvProcess].push({
+                        process: recvProcess,
+                        name: "MpiRecv",
+                        time: recvTime,
+                        eventType: "instant",
+                        matchingTime: time,
+                        sendProcess: process,
+                        depth: stacks[recvProcess].length,
+                    });
+
+                    times[recvProcess] = recvTime + randomDuration();
+                }
             }
 
             time += randomDuration();
@@ -110,9 +148,13 @@ function generateRandomData(numProcesses) {
         }
     }
 
+    let promises = [];
     for (let i = 0; i < numProcesses; i++) {
-        generateForProcess(i);
+        promises.push(generateForProcess(i));
     }
+    Promise.all(promises)
+        .then(() => console.log('All processes have completed their work'))
+        .catch((err) => console.error('An error occurred:', err));
 
     // concatenate all processes into a single array
     const allEventsArray = [];
