@@ -4,7 +4,7 @@ function randomFromArray(arr) {
 }
 
 function randomName() {
-    const names = ["Alice", "Bob", "Charlie", "MPI_Send"];
+    const names = ['Alice', 'Bob', 'Charlie', 'MPI_Send'];
     return randomFromArray(names);
 }
 
@@ -15,7 +15,9 @@ function randomDuration() {
 }
 
 function generateRandomData(numProcesses) {
-    const allEvents = {}, times = {}, stacks = {};
+    const allEvents = {},
+        times = {},
+        stacks = {};
     for (let i = 0; i < numProcesses; i++) {
         allEvents[i] = [];
         times[i] = randomDuration();
@@ -32,42 +34,41 @@ function generateRandomData(numProcesses) {
 
             if (stack.length) {
                 let top = stack[stack.length - 1];
-                
+
                 while (stack.length && top >= events.length) {
                     stack.pop();
                     top = stack[stack.length - 1];
                 }
 
                 if (!stack.length) {
-                    eventType = "enter";
+                    eventType = 'enter';
                 } else {
-                
-                const name = events[top].name;
-                if (name == "MPI_Send" || name == "MPI_Recv") {
-                    eventType = "leave";
-                } else {
-                    // make it exponentially harder to generate an enter event based on the number of events in the stack
-                    const p = Math.pow(0.5, stack.length);
-                    if (Math.random() > p) {
-                        eventType = "leave";
+                    const name = events[top].name;
+                    if (name == 'MPI_Send' || name == 'MPI_Recv') {
+                        eventType = 'leave';
                     } else {
-                        eventType = "enter";
+                        // make it exponentially harder to generate an enter event based on the number of events in the stack
+                        const p = Math.pow(0.5, stack.length);
+                        if (Math.random() > p) {
+                            eventType = 'leave';
+                        } else {
+                            eventType = 'enter';
+                        }
                     }
                 }
-            }
             } else {
-                eventType = "enter";
+                eventType = 'enter';
             }
 
-            if (eventType == "enter") {
+            if (eventType == 'enter') {
                 events.push({
                     process: process,
                     name: randomName(),
                     time: time,
-                    eventType: "enter",
+                    eventType: 'enter',
                     matchingTime: null,
                     matchingEvent: null,
-                    depth: stack.length
+                    depth: stack.length,
                 });
                 stack.push(events.length - 1);
             } else {
@@ -78,22 +79,24 @@ function generateRandomData(numProcesses) {
                     process: process,
                     name: events[index].name,
                     time: time,
-                    eventType: "leave",
+                    eventType: 'leave',
                     matchingTime: events[index].time,
                     matchingEvent: index,
-                    depth: stack.length
+                    depth: stack.length,
                 });
 
                 // MPI send instant event
-                if (events[index].name == "MPI_Send") {
-                    const recvProcess = Math.floor(Math.random() * numProcesses);
+                if (events[index].name == 'MPI_Send') {
+                    const recvProcess = Math.floor(
+                        Math.random() * numProcesses,
+                    );
                     const recvTime = time + randomDuration();
 
                     events.push({
                         process: process,
-                        name: "MpiSend",
-                        time: time - (randomDuration() / 20),
-                        eventType: "instant",
+                        name: 'MpiSend',
+                        time: time - randomDuration() / 20,
+                        eventType: 'instant',
                         recvProcess: recvProcess,
                         matchingTime: recvTime,
                         depth: stack.length,
@@ -101,14 +104,17 @@ function generateRandomData(numProcesses) {
 
                     // Remove all of the events in allEvents[recvProcess]
                     // that are after the recvTime
-                    const recvFunctionStartTime = recvTime - (randomDuration() / 20);
-                    allEvents[recvProcess] = allEvents[recvProcess].filter(e => e.time < recvFunctionStartTime);
-                    
+                    const recvFunctionStartTime =
+                        recvTime - randomDuration() / 20;
+                    allEvents[recvProcess] = allEvents[recvProcess].filter(
+                        e => e.time < recvFunctionStartTime,
+                    );
+
                     allEvents[recvProcess].push({
                         process: recvProcess,
-                        name: "MPI_Recv",
+                        name: 'MPI_Recv',
                         time: recvFunctionStartTime,
-                        eventType: "enter",
+                        eventType: 'enter',
                         matchingTime: time,
                         sendProcess: process,
                         depth: stacks[recvProcess].length,
@@ -117,9 +123,9 @@ function generateRandomData(numProcesses) {
 
                     allEvents[recvProcess].push({
                         process: recvProcess,
-                        name: "MpiRecv",
+                        name: 'MpiRecv',
                         time: recvTime,
-                        eventType: "instant",
+                        eventType: 'instant',
                         matchingTime: time,
                         sendProcess: process,
                         depth: stacks[recvProcess].length,
@@ -140,10 +146,10 @@ function generateRandomData(numProcesses) {
                 process: process,
                 name: events[index].name,
                 time: time,
-                eventType: "leave",
+                eventType: 'leave',
                 matchingTime: events[index].time,
                 matchingEvent: index,
-                depth: stack.length
+                depth: stack.length,
             });
         }
     }
@@ -154,7 +160,7 @@ function generateRandomData(numProcesses) {
     }
     Promise.all(promises)
         .then(() => console.log('All processes have completed their work'))
-        .catch((err) => console.error('An error occurred:', err));
+        .catch(err => console.error('An error occurred:', err));
 
     // concatenate all processes into a single array
     const allEventsArray = [];
@@ -167,32 +173,56 @@ function generateRandomData(numProcesses) {
 }
 
 function generateRandomDataOld(numProcesses, numEvents) {
-    const names = ["Alice", "Bob", "Charlie", "David", "Eve",
-        "Frank", "Grace", "Heidi", "Ivan", "Judy", "Kevin", "Linda",
-        "Michael", "Nancy", "Oscar", "Peggy", "Quincy", "Rita", "Steve",
-        "Tina", "Ursula", "Victor", "Wendy", "Xander", "Yvonne", "Zach"];
+    const names = [
+        'Alice',
+        'Bob',
+        'Charlie',
+        'David',
+        'Eve',
+        'Frank',
+        'Grace',
+        'Heidi',
+        'Ivan',
+        'Judy',
+        'Kevin',
+        'Linda',
+        'Michael',
+        'Nancy',
+        'Oscar',
+        'Peggy',
+        'Quincy',
+        'Rita',
+        'Steve',
+        'Tina',
+        'Ursula',
+        'Victor',
+        'Wendy',
+        'Xander',
+        'Yvonne',
+        'Zach',
+    ];
 
     const data = [];
 
     while (data.length < numEvents) {
         // event type is either "enter" or "instant"
-        const eventType = randomFromArray(["enter", "instant"]);
+        const eventType = randomFromArray(['enter', 'instant']);
         const process = Math.floor(Math.random() * numProcesses);
         const time = Math.floor(Math.random() * 1000); // Adjust the range as needed
 
-        if (eventType == "enter") {
+        if (eventType == 'enter') {
             const matchingTime = time + Math.floor(Math.random() * 100); // Ensure the receive time is after the send time
             data.push({
                 process: process,
                 name: randomFromArray(names),
                 time: time,
-                eventType: "enter",
-                matchingTime: matchingTime
+                eventType: 'enter',
+                matchingTime: matchingTime,
             });
-        } else if (eventType == "instant") {
-            const name = randomFromArray(["MpiSend", "MpiBarrier"]);
+        } else if (eventType == 'instant') {
+            const name = randomFromArray(['MpiSend', 'MpiBarrier']);
 
-            if (name == "MpiSend") {
+            if (name == 'MpiSend') {
                 const recvTime = time + Math.floor(Math.random() * 100); // Ensure the receive time is after the send time
                 const recvProcess = (process + 1) % numProcesses; // Ensure the receiver is a different process
 
@@ -203,30 +233,30 @@ function generateRandomDataOld(numProcesses, numEvents) {
                     time: time,
                     eventType: eventType,
                     matchingTime: recvTime,
-                    recvProcess: recvProcess
+                    recvProcess: recvProcess,
                 });
                 data.push({
                     process: recvProcess,
-                    name: "MpiRecv",
+                    name: 'MpiRecv',
                     time: recvTime,
                     eventType: eventType,
                     matchingTime: time,
-                    sendProcess: process
+                    sendProcess: process,
                 });
 
                 // MPI_Send and MPI_Recv function calls
                 data.push({
                     process: process,
-                    name: "MPI_Send",
+                    name: 'MPI_Send',
                     time: time - Math.floor(Math.random() * 50),
-                    eventType: "enter",
+                    eventType: 'enter',
                     matchingTime: time + Math.floor(Math.random() * 50),
                 });
                 data.push({
                     process: recvProcess,
-                    name: "MPI_Recv",
+                    name: 'MPI_Recv',
                     time: recvTime - Math.floor(Math.random() * 50),
-                    eventType: "enter",
+                    eventType: 'enter',
                     matchingTime: recvTime + Math.floor(Math.random() * 50),
                 });
             } else {
@@ -237,12 +267,11 @@ function generateRandomDataOld(numProcesses, numEvents) {
                         name: name,
                         time: time,
                         eventType: eventType,
-                        matchingTime: null
+                        matchingTime: null,
                     });
                 }
             }
         }
-
     }
     return data;
 }

@@ -1,11 +1,18 @@
 {
-  "name": "pipit-d3",
-  "version": "1.0.0",
-  "description": "",
-  "main": "generate.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC"
+    "name": "pipit-d3",
+    "version": "1.0.0",
+    "description": "",
+    "main": "generate.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "http-server"
+    },
+    "author": "Rakrish Dhakal <dhakal.rakrish@gmail.com>",
+    "license": "ISC",
+    "devDependencies": {
+        "http-server": "^14.1.1",
+        "prettier": "^3.2.5"
+    },
+    "dependencies": {}
 }
