@@ -14,9 +14,9 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
         .sort();
 
     // Set up SVG container with margins
-    const margin = { top: 20, right: 50, bottom: 50, left: 60 }; // Adjust margins as needed
+    const margin = { top: 20, right: 50, bottom: 50, left: 70 }; // Adjust margins as needed
     const svgWidth = window.innerWidth - margin.left - margin.right;
-    const svgHeight = 70 + 20 * processes.length;
+    const svgHeight = 70 + 25 * processes.length;
     const svg = d3
         .select('#visualization')
         .append('svg')
@@ -65,11 +65,13 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
         .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     // Draw rectangles for enter events
-    const rects = main
+    const rectG = main
         .selectAll('.enter-event')
         .data(data.filter(d => d['Event Type'] === 'Enter'))
         .enter()
-        .append('rect')
+        .append('g'); // Use a group to contain both the rectangle and the text
+
+    const rects = rectG.append('rect')
         .attr('class', 'enter-event')
         .attr('x', d => xScale(d['Timestamp (ns)']))
         .attr('y', d => yScale(d['Process']))
@@ -80,9 +82,16 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
         )
         .attr('height', yScale.bandwidth() * 0.9)
         .attr('fill', d => colorScale(d['Name']))
-        .attr('opacity', 0.5)
-        // inner box shadow with css
-        .attr('class', 'enter-event');
+        .attr('opacity', 1);
+
+    // Add text inside the rectangles
+    const labels = rectG.append('text')
+        .attr('x', d => xScale(d['Timestamp (ns)']) + 5) // Adjust these values as needed
+        .attr('y', d => yScale(d['Process']) + yScale.bandwidth() / 2)
+        .attr('dy', '.35em') // Vertically center text
+        .text(d => d['Name'])
+        .attr('font-size', '10px') // Adjust as needed
+        .attr('fill', 'black'); // Adjust as needed
 
     // Draw circles for instant events
     const dots = main
@@ -97,10 +106,21 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
         .attr('fill', d => colorScale(d['Name']));
 
     // Add x axis
-    const xAxis = d3.axisBottom(xScale);
+    const xAxis = d3.axisTop(xScale);
+
+    function formatNanoSeconds(ns) {
+        if (ns < 1000) return ns + " ns";
+        else if (ns < 1e6) return (ns / 1e3).toFixed(2) + " µs";
+        else if (ns < 1e9) return (ns / 1e6).toFixed(2) + " ms";
+        else return (ns / 1e9).toFixed(2) + " s";
+    }
+
+    xAxis.tickFormat(formatNanoSeconds);
+
     const gX = svg
         .append('g')
-        .attr('transform', 'translate(0,' + (svgHeight - margin.bottom) + ')')
+        .attr('transform', `translate(0, ${margin.top})`)
+        .attr('class', 'axis x-axis')
         .call(xAxis);
 
     // Add y axis
@@ -109,7 +129,11 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
     });
     svg.append('g')
         .attr('transform', 'translate(' + margin.left + ',0)')
-        .call(yAxis);
+        .attr('class', 'axis y-axis')
+        .call(yAxis)
+        .selectAll(".tick line").remove() // This removes the tick lines
+        .selectAll(".domain").remove(); // This removes the axis line
+    svg.selectAll(".y-axis .domain").remove();
 
     // Define zoom function
     const zoom = d3
@@ -137,6 +161,9 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
 
         // Update the position of the dots
         dots.attr('cx', d => newXScale(d['Timestamp (ns)']));
+
+        // Update the position of the labels
+        labels.attr('x', d => newXScale(d['Timestamp (ns)']) + 5);
     }
 
     // // Add mouseover and mouseout events to the rectangles for enter events
