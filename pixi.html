@@ -25,7 +25,7 @@
         // Create some fake event data
         let data = [
             { start: 1, end: 10, name: "Event 1", process: 0 },
-            { start: 3, end: 4, name: "Event 2 asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf", process: 1, },
+            { start: 3, end: 4, name: "Event 2 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", process: 1, },
             { start: 7, end: 9, name: "Event 3", process: 2, },
             { start: 8, end: 12, name: "Event 4", process: 0, },
             { start: 10, end: 15, name: "Event 5", process: 1, },
@@ -74,41 +74,87 @@
 
         data.forEach((event, i) => {
             // Add the rectangle
-            const graphics = new PIXI.Graphics();
-            const color = colorScale(event.name);
-            graphics.beginFill(parseInt(color.replace(/^#/, ''), 16));
-            graphics.drawRect(
+            event.rect = new PIXI.Graphics();
+            event.rect.beginFill(parseInt(colorScale(event.name).replace(/^#/, ''), 16));
+            event.rect.drawRect(
                 xScale(event.start),
                 yScale(event.process),
                 xScale(event.end - event.start),
                 yScale.bandwidth()
             );
-            graphics.endFill();
-            app.stage.addChild(graphics);
+            // event.rect.anchor = new PIXI.Point(0, 0.5);
+            // event.rect.x = xScale(event.start) + xScale(event.end - event.start) / 2;
+            // event.rect.y = yScale(event.process);
+            
+            event.rect.endFill();
+            // event.rect.interactive = true;
+            // event.rect.hitArea = new PIXI.Rectangle(
+            //     xScale(event.start),
+            //     yScale(event.process),
+            //     xScale(event.end - event.start),
+            //     yScale.bandwidth()
+            //     );
+            //     event.rect.on('mouseover', () => {
+            //         event.rect.tint = 0xCCCCCC;
+            //     });
+            //     event.rect.on('mouseout', () => {
+            //         event.rect.tint = 0xFFFFFF;
+            //     });
+            app.stage.addChild(event.rect);
 
             // Add the label
-            const text = new PIXI.BitmapText(event.name, {
+            event.label = new PIXI.BitmapText(event.name, {
                 fontName: 'LabelFont',
                 fontSize: 12,
                 align: 'left',
             });
-            text.x = xScale(event.start) + 5;
-            text.y = yScale(event.process);
-            text.anchor = new PIXI.Point(0, -0.5);
-            app.stage.addChild(text);
+            event.label.x = xScale(event.start) + 5;
+            event.label.y = yScale(event.process);
+            event.label.anchor = new PIXI.Point(0, -0.5);
 
             // Create a clipping mask for the label
-            const mask = new PIXI.Graphics();
-            mask.beginFill(0x000000);
-            mask.drawRect(
-                xScale(event.start),
-                yScale(event.process),
-                xScale(event.end - event.start),
-                yScale.bandwidth()
-            );
-            mask.endFill();
-            text.mask = mask;
+            // const mask = new PIXI.Graphics();
+            // mask.beginFill(0x000000);
+            // mask.drawRect(
+            //     xScale(event.start),
+            //     yScale(event.process),
+            //     xScale(event.end - event.start),
+            //     yScale.bandwidth()
+            // );
+            // mask.endFill();
+            // event.rect.addChild(mask);
+
+            // event.label.mask = mask;
+            app.stage.addChild(event.label);
         });
+
+        // Define zoom function
+        const zoom = d3
+            .zoom()
+            .scaleExtent([0.5, 1000]) // This controls the minimum and maximum zoom scale
+            .on('zoom', handleZoom);
+
+        // Apply zoom to the SVG
+        d3.select(app.view).call(zoom);
+
+        function handleZoom(e) {
+            const { transform } = e;
+            
+            const newXScale = e.transform.rescaleX(xScale);
+            console.log(transform);
+
+            // console.log(xScale(5), newXScale(5));
+
+            // Transform the rectangles
+            data.forEach((event, i) => {
+                // event.rect.x = newXScale(event.start) / newXScale.range()[1] - new
+                event.rect.x = transform.x;
+                // event.rect.width = transform.k;
+                // event.rect.width = newXScale(event.end) - newXScale(event.start);
+
+                event.label.x = newXScale(event.start) + 5;
+            });
+        }
     </script>
 </body>
 
