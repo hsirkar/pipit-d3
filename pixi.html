@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixiJS Rectangles</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.0/pixi.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            background: white;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        // Create a Pixi Application
+        let app = new PIXI.Application({
+            width: 1200,
+            height: 600,
+            antialias: true,
+            // transparent: false,
+            backgroundColor: 0xFFFFFF,
+            resolution: 1
+        });
+
+        // Add the canvas that Pixi automatically created for you to the HTML document
+        document.body.appendChild(app.view);
+
+        // Create a Graphics object
+        let graphics = new PIXI.Graphics();
+
+        // Create some fake event data
+        let data = [
+            { start: 1, end: 10, name: "Event 1", process: 0 },
+            { start: 3, end: 4, name: "Event 2", process: 0, },
+            { start: 7, end: 9, name: "Event 3", process: 0, }
+        ]
+
+        const xScale = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.end)])
+            .range([0, 800]);
+
+        const font = PIXI.BitmapFont.from('LabelFont', {
+            fontFamily: 'Arial',
+            fontSize: 12,
+            strokeThickness: 0,
+            fill: 'white',
+        });
+
+        // Draw the events
+        data.forEach((event, i) => {
+            graphics.beginFill(0x0000FF);
+            graphics.drawRect(xScale(event.start), 50 + i * 100, xScale(event.end - event.start), 50);
+            graphics.endFill();
+        });
+
+        // Add the Graphics object to the stage
+        app.stage.addChild(graphics);
+
+        data.forEach((event, i) => {
+            const text = new PIXI.BitmapText(event.name, {
+                fontName: 'LabelFont',
+                fontSize: 12,
+                align: 'left',
+            });
+            text.x = xScale(event.start);
+            text.y = 50 + i * 100;
+            app.stage.addChild(text);
+        });
+    </script>
+</body>
+
+</html>
