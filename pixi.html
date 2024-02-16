@@ -25,8 +25,11 @@
         // Create some fake event data
         let data = [
             { start: 1, end: 10, name: "Event 1", process: 0 },
-            { start: 3, end: 4, name: "Event 2", process: 1, },
-            { start: 7, end: 9, name: "Event 3", process: 2, }
+            { start: 3, end: 4, name: "Event 2 asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf", process: 1, },
+            { start: 7, end: 9, name: "Event 3", process: 2, },
+            { start: 8, end: 12, name: "Event 4", process: 0, },
+            { start: 10, end: 15, name: "Event 5", process: 1, },
+            { start: 13, end: 17, name: "Event 6", process: 2, },
         ]
         const processes = data
             .map(d => d.process)
@@ -39,28 +42,28 @@
         const appHeight = 70 + 25 * processes.length;
 
         let app = new PIXI.Application({
-            width: appWidth + margin.left + margin.right,
-            height: appHeight + margin.top + margin.bottom,
+            resizeTo: window,
             antialias: true,
-            transparent: true,
-            // backgroundColor: 0xFFFFFF,
+            backgroundColor: 0xFFFFFF,
             resolution: 1
         });
 
         // Add the canvas that Pixi automatically created for you to the HTML document
         document.body.appendChild(app.view);
 
-        // Create a Graphics object
-        let graphics = new PIXI.Graphics();
-
         const xScale = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d.end)])
-                .range([margin.left, appWidth - margin.right]);
+            .domain([0, d3.max(data, d => d.end)])
+            .range([margin.left, appWidth - margin.right]);
 
         const yScale = d3
             .scaleBand()
             .domain(processes)
             .range([margin.top, appHeight - margin.bottom]);
+        
+        // Color by event name
+        const colorScale = d3
+            .scaleOrdinal(d3.schemeCategory10)
+            .domain(data.map(d => d.name));
 
         const font = PIXI.BitmapFont.from('LabelFont', {
             fontFamily: 'Arial',
@@ -69,9 +72,11 @@
             fill: 'white',
         });
 
-        // Draw the events
         data.forEach((event, i) => {
-            graphics.beginFill(0x0000FF);
+            // Add the rectangle
+            const graphics = new PIXI.Graphics();
+            const color = colorScale(event.name);
+            graphics.beginFill(parseInt(color.replace(/^#/, ''), 16));
             graphics.drawRect(
                 xScale(event.start),
                 yScale(event.process),
@@ -79,21 +84,30 @@
                 yScale.bandwidth()
             );
             graphics.endFill();
-        });
+            app.stage.addChild(graphics);
 
-        // Add the Graphics object to the stage
-        app.stage.addChild(graphics);
-
-        data.forEach((event, i) => {
+            // Add the label
             const text = new PIXI.BitmapText(event.name, {
                 fontName: 'LabelFont',
                 fontSize: 12,
                 align: 'left',
             });
-            text.x = xScale(event.start);
+            text.x = xScale(event.start) + 5;
             text.y = yScale(event.process);
             text.anchor = new PIXI.Point(0, -0.5);
             app.stage.addChild(text);
+
+            // Create a clipping mask for the label
+            const mask = new PIXI.Graphics();
+            mask.beginFill(0x000000);
+            mask.drawRect(
+                xScale(event.start),
+                yScale(event.process),
+                xScale(event.end - event.start),
+                yScale.bandwidth()
+            );
+            mask.endFill();
+            text.mask = mask;
         });
     </script>
 </body>
