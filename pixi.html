@@ -22,13 +22,28 @@
 
 <body>
     <script>
+        // Create some fake event data
+        let data = [
+            { start: 1, end: 10, name: "Event 1", process: 0 },
+            { start: 3, end: 4, name: "Event 2", process: 1, },
+            { start: 7, end: 9, name: "Event 3", process: 2, }
+        ]
+        const processes = data
+            .map(d => d.process)
+            .filter((value, index, self) => self.indexOf(value) === index)
+            .sort();
+
         // Create a Pixi Application
+        const margin = { top: 20, right: 50, bottom: 50, left: 70 }; // Adjust margins as needed
+        const appWidth = window.innerWidth - margin.left - margin.right;
+        const appHeight = 70 + 25 * processes.length;
+
         let app = new PIXI.Application({
-            width: 1200,
-            height: 600,
+            width: appWidth + margin.left + margin.right,
+            height: appHeight + margin.top + margin.bottom,
             antialias: true,
-            // transparent: false,
-            backgroundColor: 0xFFFFFF,
+            transparent: true,
+            // backgroundColor: 0xFFFFFF,
             resolution: 1
         });
 
@@ -38,16 +53,14 @@
         // Create a Graphics object
         let graphics = new PIXI.Graphics();
 
-        // Create some fake event data
-        let data = [
-            { start: 1, end: 10, name: "Event 1", process: 0 },
-            { start: 3, end: 4, name: "Event 2", process: 0, },
-            { start: 7, end: 9, name: "Event 3", process: 0, }
-        ]
-
         const xScale = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.end)])
-            .range([0, 800]);
+                .domain([0, d3.max(data, d => d.end)])
+                .range([margin.left, appWidth - margin.right]);
+
+        const yScale = d3
+            .scaleBand()
+            .domain(processes)
+            .range([margin.top, appHeight - margin.bottom]);
 
         const font = PIXI.BitmapFont.from('LabelFont', {
             fontFamily: 'Arial',
@@ -59,7 +72,12 @@
         // Draw the events
         data.forEach((event, i) => {
             graphics.beginFill(0x0000FF);
-            graphics.drawRect(xScale(event.start), 50 + i * 100, xScale(event.end - event.start), 50);
+            graphics.drawRect(
+                xScale(event.start),
+                yScale(event.process),
+                xScale(event.end - event.start),
+                yScale.bandwidth()
+            );
             graphics.endFill();
         });
 
@@ -73,7 +91,8 @@
                 align: 'left',
             });
             text.x = xScale(event.start);
-            text.y = 50 + i * 100;
+            text.y = yScale(event.process);
+            text.anchor = new PIXI.Point(0, -0.5);
             app.stage.addChild(text);
         });
     </script>
