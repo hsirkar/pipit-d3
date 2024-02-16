@@ -185,9 +185,87 @@ const data = d3.json('ping-pong-otf2.json').then(data => {
                     newXScale(d['_matching_timestamp']) -
                     newXScale(d['Timestamp (ns)']),
             );
+        
+        labels.attr('x', d => newXScale(d['Timestamp (ns)']) + 5);
+
+        // Update the text of the labels
+        labels.each(function(d) {
+
+            const label = d3.select(this);
+            // const labelX = newXScale(d['Timestamp (ns)']) + 5;
+
+            // Use force simulation to avoid label collisions
+            // const simulation = d3.forceSimulation(data)
+            //     .force('x', d3.forceX(d => newXScale(d['Timestamp (ns)'])).strength(1))
+            //     // .force('y', d3.forceY(d => yScale(d['Process'])).strength(1))
+            //     .force('collide', d3.forceCollide(5))
+            //     .stop();
+
+            // for (let i = 0; i < 5; ++i) simulation.tick();
+
+            // Update the x position of the label based on the simulation
+            // d3.select(this).attr('x', d => d.x);
+            // d3.select(this).attr('y', d => d.y);
+
+            // // Update the position of the label
+            // d3.select(this).attr('x', d => d.x);
+            // d3.select(this).attr('y', d => d.y);
+
+            // Calculate the ideal position of the label
+            // Label should be centered but avoid collisions with other labels
+
+            // // Get the current label
+            // const labelWidth = label.node().getBBox().width;
+            const labelX = newXScale(d['Timestamp (ns)']) + 5;
+            // const labelY = yScale(d['Process']) + yScale.bandwidth() / 2;
+
+            // // Find the largest gap between nested function calls to place the label
+            // const gaps = [];
+            // const labels = d3.selectAll('.function-label');
+            // labels.each(function(other) {
+            //     if (other === d) return;
+            //     const otherLabel = d3.select(this);
+            //     const otherLabelX = newXScale(other['Timestamp (ns)']) + 5;
+            //     const otherLabelY = yScale(other['Process']) + yScale.bandwidth() / 2;
+            //     if (otherLabelY === labelY) {
+            //         gaps.push(otherLabelX - labelX - labelWidth);
+            //     }
+            // });
+            // const gap = Math.max(...gaps);
+
+            // // Move the label to the right
+            // label.attr('x', labelX + gap);
+
+
+            // Check if the label collides with any other label
+            // let collision = false;
+            // labels.each(function(other) {
+            //     if (other === d) return;
+            //     const otherLabel = d3.select(this);
+            //     const otherLabelX = newXScale(other['Timestamp (ns)']) + 5;
+            //     const otherLabelY = yScale(other['Process']) + yScale.bandwidth() / 2;
+            //     if (Math.abs(otherLabelX - labelX) < labelWidth && Math.abs(otherLabelY - labelY) < 10) {
+            //         collision = true;
+            //     }
+            // });
+
+            // // If there is a collision, move the label to the right
+            // if (collision) {
+            //     label.attr('x', newXScale(d['Timestamp (ns)']) + 5 + labelWidth);
+            // }
+
+            // // If the label is out of the screen, move it to the left
+            // if (labelX + labelWidth > svgWidth - margin.right) {
+            //     label.attr('x', svgWidth - margin.right - labelWidth);
+            // }
+
+            // If the label is out of the screen, move it to the left
+            if (labelX < margin.left) {
+                label.attr('x', margin.left + 5);
+            }
+        });
 
         // Update the position of the labels
-        labels.attr('x', d => newXScale(d['Timestamp (ns)']) + 5);
     }
 
     // // Add mouseover and mouseout events to the rectangles for enter events

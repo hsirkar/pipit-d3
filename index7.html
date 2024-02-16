@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interval Timeline with Labels</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .label {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            fill: white;
+        }
+    </style>
+</head>
+
+<body>
+    <svg width="800" height="400"></svg>
+
+    <script>
+        const data = [
+            { start: 1, end: 10, name: "Charlie", color: "red", children: [1, 2] },
+            { start: 2, end: 3, name: "Matthew", color: "blue", children: [] },
+            { start: 6, end: 7, name: "Abby", color: "green", children: [] },
+            { start: 9, end: 9.5, name: "Bob", color: "yellow", children: [] },
+        ];
+
+        const width = 800;
+        const height = 400;
+        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+
+        const svg = d3.select("svg");
+
+        const xScale = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.end)])
+            .range([margin.left, width - margin.right]);
+
+        const yScale = d3.scaleBand()
+            .domain(data.map((d, i) => i))
+            .range([margin.top, height - margin.bottom])
+            .padding(0.5);
+
+        const xAxis = d3.axisBottom(xScale);
+
+        svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0, ${height - margin.bottom})`)
+            .call(xAxis);
+
+        const bars = svg.selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => xScale(d.start))
+            .attr("y", (d, i) => yScale(0))
+            .attr("width", d => xScale(d.end) - xScale(d.start))
+            .attr("height", yScale.bandwidth())
+            .attr("fill", d => d.color);
+
+        const labels = svg.selectAll(".label")
+            .data(data)
+            .enter().append("text")
+            .attr("class", "label")
+            .attr("x", d => xScale(d.start))
+            .attr("y", (d, i) => yScale(0) + yScale.bandwidth() / 2)
+            .attr("dx", 5) // padding
+            .attr("dy", "0.35em") // vertical-align middle
+            .text(d => d.name);
+
+        // Zoom and Pan functionality
+        const zoom = d3.zoom()
+            // .scaleExtent([1, Infinity])
+            // .translateExtent([[0, 0], [width, height]])
+            // .extent([[0, 0], [width, height]])
+            .on("zoom", zoomed);
+
+        svg.call(zoom);
+
+        function zoomed(event) {
+            const { transform } = event;
+            const newXScale = transform.rescaleX(xScale);
+
+            bars.attr("x", d => newXScale(d.start))
+                .attr("width", d => newXScale(d.end) - newXScale(d.start));
+
+            xAxis.scale(newXScale);
+            svg.select(".x-axis").call(xAxis);
+
+            // Dynamic label positioning so that background interval labels aren't covered by the foreground bars
+            // labels.attr("x", d => newXScale(d.start));
+
+            // Position the label between "children" intervals
+            labels.attr("x", (d, i) => {
+                let leftCutoff = newXScale.domain()[0];
+                let rightCutoff = newXScale.domain()[1];
+
+                if (!d.children.length) return newXScale(d.start);
+
+                // List all possible intervals that we could place the label in
+                let possibleIntervals = [];
+
+                if (d.start < leftCutoff && d.end > leftCutoff) {
+                    possibleIntervals.push([(leftCutoff, d.end)]);
+                }
+                if (d.start > leftCutoff && d.end > leftCutoff) {
+                    possibleIntervals.push([(d.start, data[d.children[0]].start)]);
+                }
+                if (d.start < rightCutoff && d.end > rightCutoff) {
+                    possibleIntervals.push([(d.start, rightCutoff)]);
+                }
+                if (d.start < rightCutoff && d.end > leftCutoff) {
+                    possibleIntervals.push([(data[d.children[d.children.length - 1]].end, d.end)]);
+                }
+
+                for (let j = 0; j < d.children.length; j++) {
+                    let child = data[d.children[j]];
+                    if (child.start > d.end && child.end < rightCutoff) {
+                        possibleIntervals.push([(d.end, child.start)]);
+                    }
+                }
+                console.log(possibleIntervals);
+
+                // Sort the possible intervals by width
+                possibleIntervals.sort((a, b) => (a[1] - a[0]) - (b[1] - b[0]));
+
+
+                // Place the label in the widest interval that's in the viewport between the cutoffs
+                // for (let j = 0; j < possibleIntervals.length; j++) {
+                //     let interval = possibleIntervals[j];
+                //     if (interval[0] > leftCutoff && interval[1] < rightCutoff) {
+                //         return newXScale(interval[0]) + (newXScale(interval[1]) - newXScale(interval[0])) / 2;
+                //     }
+                // }
+
+                // If no intervals are in the viewport, place the label at the left cutoff
+                return newXScale(leftCutoff);
+            });
+        }
+
+        zoomed({ transform: d3.zoomIdentity.scale(1) });
+    </script>
+</body>
+
+</html>

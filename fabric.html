@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D3.js Timeline with Canvas</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <canvas id="timelineCanvas" width="800" height="200"></canvas>
+  <script>
+    const canvas = document.getElementById('timelineCanvas');
+    const context = canvas.getContext('2d');
+    
+    const timelineWidth = canvas.width;
+    const timelineHeight = canvas.height;
+    const timelineMargin = 20;
+    const eventHeight = 40;
+    
+    const events = [
+      { name: 'Event 1', process: 0, start: 100, end: 300 },
+      { name: 'Event 2', process: 1, start: 400, end: 600 },
+      { name: 'Event 3', process: 2, start: 700, end: 900 }
+    ];
+
+    // Draw timeline
+    context.fillStyle = 'lightgrey';
+    context.fillRect(timelineMargin, timelineMargin, timelineWidth - 2 * timelineMargin, timelineHeight - 2 * timelineMargin);
+    context.strokeStyle = 'black';
+    context.lineWidth = 2;
+    context.strokeRect(timelineMargin, timelineMargin, timelineWidth - 2 * timelineMargin, timelineHeight - 2 * timelineMargin);
+
+    // Draw events
+    events.forEach(event => {
+      const eventWidth = event.end - event.start;
+      const eventX = timelineMargin + event.start;
+      const eventY = timelineMargin + event.process * (eventHeight + timelineMargin);
+
+      context.fillStyle = 'blue';
+      context.fillRect(eventX, eventY, eventWidth, eventHeight);
+
+      context.fillStyle = 'white';
+      context.font = '16px Arial';
+      context.fillText(event.name, eventX + eventWidth / 2 - context.measureText(event.name).width / 2, eventY + eventHeight / 2);
+    });
+  </script>
+</body>
+</html>
